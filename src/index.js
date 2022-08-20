@@ -4,6 +4,7 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 import throttle from 'lodash.throttle';
+require('intersection-observer');
 import { markup } from "./render";
 import { getPhotos } from './pixabay';
 
@@ -12,6 +13,9 @@ const refs = {
     input: document.querySelector('input'),
     gallery: document.querySelector('.gallery'),
 };
+
+// const query = refs.input.value.trim();
+let resPage = 1;
 
 const lightbox = new SimpleLightbox('.photo-card a', {
     captions: true,
@@ -30,12 +34,13 @@ async function onSubmitForm(e) {
     e.preventDefault();
     refs.gallery.innerHTML = '';
     const query = refs.input.value.trim();
+    resPage = 1; 
 
     if (query === '') {
         return;
     };
 
-    const response = await getPhotos(query);
+    const response = await getPhotos(query, resPage+=1);
 
     try {
         if (response.totalHits === 0) {
@@ -48,29 +53,26 @@ async function onSubmitForm(e) {
             renderCard(response.hits);
             lightbox.refresh();
 
-            const { height: cardHeight } = document
-            .querySelector(".gallery")
-            .firstElementChild.getBoundingClientRect();
+            // const { height: cardHeight } = document
+            // .querySelector(".gallery")
+            // .firstElementChild.getBoundingClientRect();
 
-            window.scrollBy({
-            top: cardHeight * 2,
-            behavior: "smooth",
-            });
+            // window.scrollBy({
+            // top: cardHeight * 2,
+            // behavior: "smooth",
+            // });
         }
     } catch (error) {
         console.log(error);
     };
 };
 
-refs.form.addEventListener('submit', onSubmitForm);
-
-
-window.addEventListener('scroll', async () => {
+async function onScrollGetMore() {
     const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+    const query = refs.input.value.trim();
 	
-    if (clientHeight + scrollTop >= scrollHeight - 5) {
-        const query = refs.input.value.trim();
-        const response = await getPhotos(query);
+    if (clientHeight + scrollTop >= scrollHeight - 10) {
+        const response = await getPhotos(query, resPage+=1);
 
         try {
             renderCard(response.hits);
@@ -89,6 +91,9 @@ window.addEventListener('scroll', async () => {
         }
     };
 }
+
+refs.form.addEventListener('submit', onSubmitForm);
+window.addEventListener('scroll', throttle(onScrollGetMore, 250)
 );
 
 
