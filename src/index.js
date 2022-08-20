@@ -4,7 +4,6 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 import throttle from 'lodash.throttle';
-require('intersection-observer');
 import { markup } from "./render";
 import { getPhotos } from './pixabay';
 
@@ -14,7 +13,6 @@ const refs = {
     gallery: document.querySelector('.gallery'),
 };
 
-// const query = refs.input.value.trim();
 let resPage = 1;
 
 const lightbox = new SimpleLightbox('.photo-card a', {
@@ -40,7 +38,7 @@ async function onSubmitForm(e) {
         return;
     };
 
-    const response = await getPhotos(query, resPage+=1);
+    const response = await getPhotos(query, resPage);
 
     try {
         if (response.totalHits === 0) {
@@ -53,14 +51,14 @@ async function onSubmitForm(e) {
             renderCard(response.hits);
             lightbox.refresh();
 
-            // const { height: cardHeight } = document
-            // .querySelector(".gallery")
-            // .firstElementChild.getBoundingClientRect();
+            const { height: cardHeight } = document
+            .querySelector(".gallery")
+            .firstElementChild.getBoundingClientRect();
 
-            // window.scrollBy({
-            // top: cardHeight * 2,
-            // behavior: "smooth",
-            // });
+            window.scrollBy({
+            top: 0,
+            behavior: "smooth",
+            });
         }
     } catch (error) {
         console.log(error);
@@ -77,15 +75,6 @@ async function onScrollGetMore() {
         try {
             renderCard(response.hits);
             lightbox.refresh();
-
-            const { height: cardHeight } = document
-                .querySelector(".gallery")
-                .firstElementChild.getBoundingClientRect();
-
-            window.scrollBy({
-                top: cardHeight * 2,
-                behavior: "smooth",
-            });
         } catch (error) {
             console.log(error);
         }
